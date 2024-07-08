@@ -1,6 +1,0 @@
-tensorflow==2.13.1
-tensorflow==0.13.0
-flask==3.0.2
-flask-ngrok==0.0.25
-keras==2.13.1
-gunicorn
