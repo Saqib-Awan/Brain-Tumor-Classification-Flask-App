@@ -1,3 +1,4 @@
+import logging
 from flask import Flask, request, jsonify, render_template, send_file, url_for
 import os
 import cv2
@@ -7,10 +8,13 @@ import tensorflow_hub as hub
 
 app = Flask(__name__)
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 Labels = ['Benign', 'Malignant', 'Non MRI']
 Descriptions = {
-    'Benign': 'No tumor detected.', 
-    'Malignant': 'A malignant tumor is detected. Immediate medical attention is recommended.', 
+    'Benign': 'No tumor detected.',
+    'Malignant': 'A malignant tumor is detected. Immediate medical attention is recommended.',
     'Non MRI': 'Please add the brain MRI images if possible.'
 }
 
@@ -32,6 +36,8 @@ def allowed_file(filename):
 @app.route("/", methods=["GET", "POST"])
 def upload_image():
     if request.method == "POST":
+        logging.info("Processing POST request for image upload")
+
         # Check if a file was uploaded
         if "file" not in request.files:
             return jsonify({"error": "No file part"})
@@ -47,13 +53,18 @@ def upload_image():
             # Save the uploaded image to the "uploads" directory
             file_path = os.path.join("uploads", file.filename)
             file.save(file_path)
-            
+
             # Read the image file
             img = cv2.imread(file_path)
+            logging.info(f"Image loaded from: {file_path}")
+
             # Preprocess the image
             img = preprocess_image(img)
+
             # Make prediction
             prediction = model.predict(np.expand_dims(img, axis=0))
+            logging.info(f"Prediction made: {prediction}")
+
             # Format prediction
             class_idx = np.argmax(prediction)
             class_label = Labels[class_idx]
@@ -66,8 +77,8 @@ def upload_image():
             description = Descriptions.get(class_label, 'No description available.')
 
             # Return result page with prediction, confidence, description, and image path
-            return render_template("result.html", 
-                                   prediction={"class": class_label, "confidence": confidence, "description": description}, 
+            return render_template("result.html",
+                                   prediction={"class": class_label, "confidence": confidence, "description": description},
                                    image_path=image_url)
 
         else:
@@ -82,5 +93,3 @@ def serve_image(filename):
 
 if __name__ == "__main__":
     app.run()
-
-
