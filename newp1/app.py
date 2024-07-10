@@ -80,4 +80,7 @@ def upload_image():
 def serve_image(filename):
     return send_file(os.path.join("uploads", filename))
 
+if __name__ == "__main__":
+    app.run()
+
 
